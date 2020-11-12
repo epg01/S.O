@@ -9,9 +9,9 @@
 #include <errno.h>     /* Declara errno y define las constantes de error */
 #include <string.h>    /* Funciones de manejo de cadenas de uso común */
 
-//#include "get_num.h"   /* Declara nuestras funciones para manejar argumentos \
-//			  numerícos (getint() y getlong()) */
-//#include "error_functions.h" /* Declara nuestras funciones de manejo de error */
+#include "get_num.h"   /* Declara nuestras funciones para manejar argumentos \
+			  numerícos (getint() y getlong()) */
+#include "error_functions.h" /* Declara nuestras funciones de manejo de error */
 
 typedef enum {FALSE, TRUE} Boolean;
 
