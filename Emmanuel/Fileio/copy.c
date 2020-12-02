@@ -2,54 +2,50 @@
 #include <fcntl.h>
 #include "../lib/tlpi_hdr.h"
 
-#ifndef BUF_SIZE                /* Permitir que "cc -D" anule la definición */
+#ifndef BUF_SIZE
 #define BUF_SIZE 1024
 #endif
 
-int main(int argc, char *argv[])
+
+int
+main(int argc, char *argv[])
 {
-	int InputFd, OutputFd, OpenFlags;
+	int inputFd, outputFd, openFlags;
+	mode_t filePerms;
+	ssize_t numRead;
+	char buf[BUF_SIZE];
 
-	mode_t  FilePerms;
-	ssize_t NumRead;
-	char Buf[BUF_SIZE];
-
-	/* Salida del error: usage: ./copy old-file new-file */
 	if (argc != 3 || (strcmp(argv[1], "--help") == 0))
 		usageErr("%s old-file new-file\n", argv[0]);
 
-	/* Abrir entrada y salida de archivos */
+	/* Abrir archivo de entrada y salida */
 
-	InputFd = open(argv[1], O_RDONLY);
-
-	/* Salida del error: ERROR [N°ERROR stdrerror(errno)] opening file argv[1] */
-	if (InputFd == -1)
+	inputFd = open(argv[1], O_RDONLY);
+	if (inputFd == -1)
 		errExit("opening file %s", argv[1]);
 
-	OpenFlags = O_CREAT | O_WRONLY | O_TRUNC;
+	openFlags = O_CREAT | O_WRONLY | O_TRUNC;
+	filePerms = S_IRUSR | S_IWUSR  | S_IRGRP | S_IWGRP |
+		S_IROTH | S_IWOTH;   /* rw-rw-rw */
 
-	/* FilePerms = rw-rw-rw- */
-	FilePerms =  S_IRUSR | S_IWUSR | S_IRGRP |
-		     S_IROTH | S_IWOTH;
+	outputFd = open(argv[2], openFlags, filePerms);
+	if (outputFd == -1)
+		errExit("opening file %s", argv[2]);
 
-	OutputFd = open(argv[2], OpenFlags, FilePerms);
+	/* Transferir datos hasta que encontremos el final de la
+	   entrada o un error */
 
-	if (OutputFd == -1)
-	       errExit("opening file %s", argv[2]);
-
- /* Transferir datos hasta que encontremos el final de la entrada o un error */
-	while((NumRead = read(InputFd, Buf, BUF_SIZE)) > 0)
-		if ((NumRead = write(OutputFd, Buf, NumRead)) != NumRead)
+	while ((numRead = read(inputFd, buf, BUF_SIZE)) > 0)
+		if (write(outputFd, buf, numRead) != numRead)
 			fatal("Couldn't write whole buffer");
 
-	if (NumRead == -1)
-		errExit("Read");
+	if (numRead == -1)
+		errExit("read");
 
-	if (close(InputFd) == -1)
-		errExit("Close input");
-
-	if (close(OutputFd) == -1)
-		errExit("Cose output");
+	if (close(inputFd) == -1)
+		errExit("close input");
+	if (close(outputFd) == -1)
+		errExit("close output");
 
 	exit(EXIT_SUCCESS);
 }
